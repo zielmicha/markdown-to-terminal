@@ -118,9 +118,9 @@ term_blockcode(struct buf *ob, struct buf *text, void *opaque) {
 
 static int
 term_codespan(struct buf *ob, struct buf *text, void *opaque) {
-	BUFPUTSL(ob, "~~~~" NEWLINE_INDENT);
+	BUFPUTSL(ob, "`");
 	if (text) term_text_escape(ob, text->data, text->size);
-	BUFPUTSL(ob, "~~~~" NEWLINE_INDENT);
+	BUFPUTSL(ob, "'");
 	return 1;
 }
 
