@@ -1,0 +1,9 @@
+*.o
+*.md
+*~
+*.so
+*.so.*
+/mkd2html
+/mkd2man
+/mkd2term
+/depends
