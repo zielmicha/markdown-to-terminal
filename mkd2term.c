@@ -56,7 +56,7 @@ static void put_term(struct buf* ob, char* str) {
 }
 
 static void put_term_color(struct buf* ob, int color) {
-	put_term(ob, tparm(tigetstr("setf"), color));
+	put_term(ob, tparm(tigetstr("setf"), color, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
 static void put_term_normal(struct buf* ob) {
