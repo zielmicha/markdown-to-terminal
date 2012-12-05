@@ -1,5 +1,5 @@
 /* -*- mode: c, c-basic-offset: 4 -*- */
-/* mkd2term.c - man-page-formatted output from markdown text */
+/* mkd2term.c - terminal formatted output from markdown text */
 
 /*
  * Copyright (c) 2012, Michał Zieliński <michal@zielinscy.org.pl>
@@ -210,6 +210,27 @@ term_listitem(struct buf *ob, struct buf *text, int flags, void *opaque) {
 }
 
 static void
+term_hrule(struct buf* ob, void* opaque) {
+    BUFPUTSL(ob, "\n");
+    int cols = tgetnum("co");
+    int i;
+    for(i=0; i<cols - 1; i ++) bufputc(ob, '-');
+    BUFPUTSL(ob, "\n");
+}
+
+static void
+term_blockquote(struct buf *ob, struct buf *text, void *opaque) {
+    BUFPUTSL(ob, NEWLINE_INDENT);
+    if (text) {
+        while (text->size && text->data[text->size - 1] == '\n')
+            text->size -= 1;
+        bufput(ob, text->data, text->size);
+	}
+    BUFPUTSL(ob, NEWLINE_INDENT);
+}
+
+
+static void
 term_normal_text(struct buf *ob, struct buf *text, void *opaque) {
 	if (text) term_text_escape(ob, text->data, text->size);
 }
@@ -223,10 +244,10 @@ struct mkd_renderer to_man = {
 
 	/* block-level callbacks */
 	term_blockcode,
-	NULL,
+       term_blockquote,
 	NULL,
 	term_header,
-	NULL,
+       term_hrule,
 	term_list,
 	term_listitem,
 	term_paragraph,
@@ -290,6 +311,7 @@ main(int argc, char **argv) {
 	markdown(ob, ib, &to_man);
 
 	/* writing the result to stdout */
+    printf("%s", INDENT);
 	ret = fwrite(ob->data, 1, ob->size, stdout);
 	if (ret < ob->size)
 		fprintf(stderr, "Warning: only %zu output byte written, "
