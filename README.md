@@ -16,18 +16,24 @@ For some projects of mine, I wanted a lightweight C library that can parse
 John Gruber's [markdown](http://daringfireball.net/projects/markdown/)
 format into whatever I want, and that is easily extendable.
 
-The only C implementations of markdown that I know of are [Discount]
-(http://www.pell.portland.or.us/~orc/Code/markdown/) and [PEG-markdown]
-(http://github.com/jgm/peg-markdown/tree/master). Discount seemed a little
-bit too integrated and focused on HTML output for my taste, and
-PEG-markdown seemed to have a lot of dependencies and stuff. So I wrote my
-own.
+I found two existing C implementations for markdown, but they weren't 
+quite the "fit" that I wanted:
+
+  * [Discount](http://www.pell.portland.or.us/~orc/Code/markdown/), 
+    which seemed a little bit too integrated and focused on HTML output 
+    for my taste, and 
+  * [PEG-markdown](http://github.com/jgm/peg-markdown/tree/master), which 
+    seemed to have a lot of dependencies and stuff. 
+  
+So I wrote my own.
 
 I like to keep things simple, so I wrote a function that performs *only*
-markdown parsing: no file reading or writing, no (X)HTML considerations,
-etc. The actual output is performed by a set of dedicated callback
-functions, called here a renderer. Some example renderers are provided, but
-you are free to use your own to output in any format you like.
+markdown parsing—no file reading or writing, no (X)HTML considerations,
+etc. 
+
+Output is performed by a set of dedicated callback functions (here called a 
+"renderer"). Some example renderers are provided, but you are free to use 
+your own to output in any format you like.
 
 This callback mechanism make libsoldout so flexible that it does not need
 any flag or external information besides input text and renderer to
