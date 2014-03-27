@@ -52,12 +52,12 @@ The only exported function in libsoldout is `markdown()`:
     void markdown(struct buf *ob, struct buf *ib, const struct mkd_renderer *rndr);
 ```
 
-- `ob` is the output buffer, where the renderer will append data,
-- `ib` is the input buffer, where the markdown text should be stored prior
-  to the `markdown()` call,
-- `rndr` is a pointer to the renderer structure.
+  * `ob` is the output buffer, where the renderer will append data
+  * `ib` is the input buffer, where the markdown text should be stored prior
+    to the `markdown()` call
+  * `rndr` is a pointer to the renderer structure
 
-How to use these structures is explained in the following sections.
+Read on to learn how to use these structures.
 
 
 ### Buffers: `struct buf`
@@ -106,13 +106,13 @@ a regular C string.
 
 The most common functions to append data into buffers are:
 
-- `bufprintf()` which behaves like any \*printf function,
-- `bufput()` which is similar to `memcpy()`,
-- `bufputs()` which appends a zero-terminated string to a buffer,
-- `BUFPUTSL()` which is a macro to replace `bufputs()` when using string
-  litterals, because then the data size is known at compile-time, this
-  saves a call to `strlen()`,
-- `bufputc()` for single-character appends.
+  * `bufprintf()` which behaves like any `*printf` function
+  * `bufput()` which is similar to `memcpy()`
+  * `bufputs()` which appends a zero-terminated string to a buffer
+  * `BUFPUTSL()` which is a macro to replace `bufputs()` when using string
+    literals (when data size is known at compile-time, this saves a call 
+    to `strlen()`)
+  * `bufputc()` for single-character appends
 
 Modification of existing data in a buffer is also performed through direct
 access of structure members.
@@ -242,9 +242,9 @@ Tables are one of the few extensions that are quite difficult and/or hacky
 to implement using vanilla Markdown parser and a renderer. Thus a support
 has been introduced into the parser, using dedicated callbacks:
 
-  - `table_cell`, which is called with the span-level contents of the cell;
-  - `table_row`, which is called with data returned by `table_cell`;
-  - `table`, which called with data returned by `table_row`.
+  * `table_cell`, which is called with the span-level contents of the cell;
+  * `table_row`, which is called with data returned by `table_cell`;
+  * `table`, which called with data returned by `table_row`.
 
 The input format to describe tables is taken from PHP-Markdown, and looks
 like this:
@@ -303,9 +303,10 @@ included, both to illustrate how to write a set of renderer functions and
 to allow anybody who do not need special extensions to use libsoldout
 without hassle.
 
-All the examples provided here comme with two flavors, `_html` producing
-HTML code (self-closing tags are rendered like this: `<hr>`), and `_xhtml`
-producing XHTML code (self-closing tags like `<hr />`).
+All examples provided here come in two flavors: 
+
+ * `_html`  producing HTML code (self-closing tags are rendered like `<hr>`)
+ * `_xhtml` producing XHTML code (self-closing tags are rendered like `<hr />`)
 
 #### Standard markdown renderer
 
@@ -325,15 +326,15 @@ easily with libsoldout by using both a dedicated renderer and some
 preprocessing to make the extension look like something closer to the
 original markdown syntax.
 
-Here is a list of all extensions included in these renderers:
+Here are all the extensions included in the renderers:
 
- - image size specitication, by appending " =(width)x(height)" to the link,
+ - image size specification by appending ` =(width)x(height)` to the link
  - pseudo-protocols in links:
-	* abbr:_description_ for `<abbr title="`_description_`">...</abbr>`
-	* class:_name_ for `<span class="`_name_`">...</span>`
-	* id:_name_ for `<a id="`_name_`>...</a>`
-	* raw:_text_ for verbatim unprocessed _text_ inclusion
- - class blocks: blockquotes beginning with %_class_% will be rendered as a
+   * `abbr`:«description» for `<abbr title="`«description»`">...</abbr>`
+   * `class`:«name» for `<span class="`«name»`">...</span>`
+   * `id`:«name» for `<a id="`«name»`>...</a>`
+   * `raw`:«text» for verbatim unprocessed «text» inclusion
+ - `class` blocks: blockquotes beginning with `%_class_%` will be rendered as a
    `div` of the given class(es).
 
 #### Natasha's own extensions
@@ -342,18 +343,17 @@ Here is a list of all extensions included in these renderers:
 things that I need to convert losslessly my existing HTML into extended
 markdown.
 
-Here is a list of these extensions :
+Here is a list of these extensions:
 
- - id attribute for headers, using the syntax _id_#_Header text_
- - class attribute for paragraphs, by putting class name(s) between
-   parenthesis at the very beginning of the paragraph
- - `<ins>` and `<del>` spans, using respectively `++` and `--` as
-   delimiters (with emphasis-like restrictions, i.e. an opening delimiter
-   cannot be followed by a whitespace, and a closing delimiter cannot be
-   preceded by a whitespace).
- - plain `<span>` without attribute, using emphasis-like delimiter `|`
+  * `id` attribute for headers, using the syntax `id#«Header text»`
+  * `class` attribute for paragraphs, by putting class name(s) between
+    parentheses at the very beginning of the paragraph
+  * `<ins>` and `<del>` spans (using `++` and `--` respectively);
+    there are necessarily emphasis-like restrictions (i.e. no whitespace 
+    allowed after an opening delimiter, or before a closing delimiter)
+  * plain `<span>` without attributes, using the (emphasis-like) delimiter `|`
 
-Follows an example use of all of them:
+Here's an example using of all of them:
 
 ```markdown
 	###atx_id#ID was chosen to look nice in atx-style headers ###
@@ -542,13 +542,13 @@ the hierarchy are left to check.
 hierarchy:
 
   * `markdown()`, which is declared through the inclusion of `markdown.h`
-at the very beginning of `markdown.c`. However an easy text search shows
-that it's actually never called here, which obviously prevents it from
-being part of a recursion cycle.
+    at the very beginning of `markdown.c`. However an easy text search shows
+    that it's actually never called here, which obviously prevents it from
+    being part of a recursion cycle.
   * `parse_block()`, which is declared at the beginning of the block-level
-section, but defined at the end.
+    section, but defined at the end.
   * `parse_inline()`, which uses functions pointer to dispatch active
-character handling towards `char_*` functions below.
+    character handling towards `char_*` functions below.
 
 So at this point I have proved that any recursion cycle *always* involves
 `parse_block()` or `parse_inline()`. So checking a depth-indicator only in
@@ -558,14 +558,14 @@ these functions is enough to prevent recursion cycles.
 to `parse_block()` or `parse_inline()` happen after at least one working
 buffer allocation. This is again a bit tedious to check:
 
-   * `parse_block()` is called in `markdown()`, which is irrelevant, and in
-`parse_blockquote()` and `parse_listitem()`, which allocate respectively
-one and two working buffers at the very beginning of the function;
-   * `parse_inline()` is called in `parse_emph1()`, `parse_emph2()`,
-`parse_emph3()`, `char_link()`, `parse_paragraph()` (twice), and each time
-it's called right after allocating a new working buffer; and in
-`parse_listitem()` which allocates two working buffers at the very
-beginning of the functions.
+  * `parse_block()` is called in `markdown()` (which is irrelevant), and in
+    `parse_blockquote()` and `parse_listitem()`, which respectively allocate
+    one and two working buffers at the very beginning of the function.
+  * `parse_inline()` is called in `parse_emph1()`, `parse_emph2()`,
+    `parse_emph3()`, `char_link()`, `parse_paragraph()` (twice). Each time,
+    it's called immediately after allocating a new working buffer, and in
+    `parse_listitem()` (which allocates two working buffers) at the very
+    beginning of the functions.
 
 Therefore, `rndr->work.size` will always increase between calls of
 `parse_block()` or `parse_inline()`, which in turns proves that putting an
