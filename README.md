@@ -54,7 +54,7 @@ The only exported function in libsoldout is `markdown()`:
 How to use these structures is explained in the following sections.
 
 
-### Buffers: struct buf
+### Buffers: `struct buf`
 
 I use `struct buf` extensively in input and output buffers. The initial
 idea was constructing a Pascal-string like structure, to be able to store
@@ -115,7 +115,7 @@ This covers the basics to handle my `struct buf`, but there might still be
 some interesting stuff to be learned from the header.
 
 
-### Renderer: struct mkd_renderer
+### Renderer: `struct mkd_renderer`
 
 Libsoldout only performs the parsing of markdown input, the construction of
 the output is left to a *renderer*, which is a set of callback functions
@@ -366,6 +366,8 @@ Follows an example use of all of them:
 	|Look on my works, ye Mighty, and despair!"|
 ```
 
+
+
 Internals
 ---------
 
@@ -374,7 +376,7 @@ use a logical order, which is roughly chronological, which means going
 roughly from the bottom of the file to the top.
 
 
-### markdown()
+### `markdown()`
 
 The markdown function is divded into four parts: setup of the `struct
 render`, first pass on the input, actual parsing, and clean-up.
@@ -403,7 +405,7 @@ specialized callback is stored for active characters. This initialization
 is the bulk of the first part, because characters should only be marked
 active when the rendering callback pointer is non-null.
 
-#### First pass on the input
+#### Input: First pass
 
 During the first pass on the input, newlines are normalized and reference
 lines taken out of the input, and stored into `rndr.refs`.
@@ -417,7 +419,7 @@ line.
 When all the tests are passed, a new `struct link_ref` is created and
 sorted into `rndr.refs`.
 
-#### Second pass
+#### Input: Second pass
 
 `markdown()` does not do much here, the result of the first pass is fed to
 `parse_block()` which fills the output buffer `ob`.
@@ -510,7 +512,7 @@ emphasis character, it first looks whether it is single or double or timple
 emphasis, an then goes forward looking for a match.
 
 
-### Proof that recursion depth is bount by `max_work_stack`
+### Proof that recursion depth is bound by `max_work_stack`
 
 The core of the code here is that when entering the functions
 `parse_inline()` and `parse_block()`, if the current size of the working
