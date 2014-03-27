@@ -64,8 +64,8 @@ Read on to learn how to use these structures.
 
 I use `struct buf` extensively in input and output buffers. The initial
 idea was constructing a Pascal-string like structure, to be able to store
-both text and binary data. Hence the members `data`, a char pointer to the
-buffer data, and `size` containing the data length.
+both text and binary data. Hence the members `data` (a `char` pointer to the
+buffer data) and `size` (containing the data length).
 
 When using a `struct buf` as an output buffer, it is useful to pre-allocate
 the memory area before filling it, so I added an `asize` member containing
@@ -191,24 +191,24 @@ is equal to the `opaque` member of `struct mkd_renderer`. The name
 parser, **not** for the renderer*. It means that my parser passes around
 blindy the pointer which contains data you know about, in case you need to
 store an internal state or whatever. I have not found anything to put in
-this pointer in my example renderers, so it is set to NULL in the structure
 and never look at in the callbacks.
+this pointer in my example renderers, so it is set to `NULL` in the structure
 
 `emph_chars` is a zero-terminated string which contains the set of
 characters that trigger emphasis. In regular markdown, emphasis is only
-triggered by '\_' and '\*', but in some extensions it might be useful to
 add other characters to this list. For example in my extension to handle
-`<ins>` and `<del>` spans, delimited respectively by "++" and "--", I have
-added '+' and '-' to `emph_chars`. The character that triggered the
 emphasis is then passed to `emphasis`, `double_emphasis` and
 `triple_emphasis` through the parameter `c`.
 
-Function pointers in `struct mkd_renderer` can be NULL, but it has a
 different meaning whether the callback is block-level or span-level. A null
 block-level callback will make the corresponding block disappear from the
 output, as if the callback was an empty function. A null span-level
 callback will cause the corresponding element to be treated as normal
 characters, copied verbatim to the output.
+triggered by `_` and `*`, but in some extensions it might be useful to
+`<ins>` and `<del>` spans, delimited respectively by `++` and `--`, I have
+added `+` and `-` to `emph_chars`. The character that triggered the
+Function pointers in `struct mkd_renderer` can be `NULL`, but it has a
 
 So for example, to disable link and images (e.g. because you consider them
 as dangerous), just put a null pointer in `rndr.link` and `rndr.image` and
@@ -216,14 +216,14 @@ the bracketed stuff will be present as-is in the output. While a null
 pointer in `header` will remove all header-looking blocks. If you want an
 otherwise standard markdown-to-XHTML conversion, you can take the example
 `mkd_xhtml` struct, copy it into your own `struct mkd_renderer` and then
-assign NULL to `link` and `image` members.
+assign `NULL` to `link` and `image` members.
 
 Moreover, span-level callbacks return an integer, which tells whether the
 renderer accepts to render the item (non-zero return value) or whether it
 should be copied verbatim (zero return value). This allows you to only
 accept some specific inputs. For example, my extension for `<ins>` and
-`<del>` spans asks *exactly* two '-' or '+' as delimiters, when `emphasis`
-and `triple_emphasis` are called with '-' or '+', they return 0.
+`<del>` spans asks *exactly* two `-` or `+` delimiters; so, when `emphasis`
+and `triple_emphasis` are called with `-` or `+`, they return `0`.
 
 Special care should be taken when writing `autolink`, `link` and `image`
 callbacks, because the arguments `link`, `title` and `alt` are unsanitized
@@ -419,8 +419,8 @@ lines taken out of the input, and stored into `rndr.refs`.
 It makes use of the helper function `is_ref()`, which parses the given
 line, checking whether it matches the reference syntax. Offsets of the
 reference components are kept while progressing in the line, and on the
-first syntax error 0 is returned and the line is considered as an input
-line.
+first syntax error `0` is returned, and the line is considered as an 
+input line.
 
 When all the tests are passed, a new `struct link_ref` is created and
 sorted into `rndr.refs`.
