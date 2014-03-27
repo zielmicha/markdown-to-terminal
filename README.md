@@ -73,7 +73,7 @@ the allocated size of the memory pointed by `data`.
 
 When accumulating data in a growing memory area, there is a tradeoff
 between memory usage and speed: the more bytes are added each time, the
-less `realloc()` is called, which means potentially less `memcpy()` to a new
+less `realloc()` is called, which (potentially) means less `memcpy()` to a new
 zone, so a faster code, but more memory being allocated for nothing. To
 set the tradeoff on a case-by-case basis, there is a `unit` member in the
 structure: when more memory is needed, `asize` is augmented by a multiple
@@ -83,24 +83,24 @@ of `unit`. So the larger `unit`, the more memory is allocated at once, the
 To further improve code efficiency by removing unneeded memcpy, I added a
 reference count to the structure: the `ref` member.
 
-Buffers are created using `bufnew()` whose only argument is the value for
+Buffers are created using `bufnew()`. Its only argument is the value for
 `unit`. `bufrelease()` decreases the reference count of a buffer, and frees
 it when this count is zero. `bufset()` is used to set a `struct buf`
 pointer to point to the given buffer, increasing reference count and
 dealing with special cases like volatile buffers.
 
 Usually data from `struct buf` are read through direct access of its
-members `data` and `size`. One interesting trick which might not be widely
-known is how to printf a buffer (or any kind of non-zero-terminated
-string) that doesn't contains any zero, using the `%.*s`. For example:
+members `data` and `size`. One interesting trick is calling `printf` on a 
+buffer (or any kind of non-zero-terminated string), provided it doesn't 
+contain zeroes, using `%.*s`. For example:
 
 ```c
 	printf("Buffer string: \"%.*s\"\n", (int)buf->size, buf->data);
 ```
 
 In case you really need a zero-terminated string, you can call
-`bufnullterm()` which appends a zero character without changing `size`,
-hence the buffer being virtually the same (and will no longer be
+`bufnullterm()`, which appends a zero character without changing `size`.
+This allows the buffer to remain virtually the same (and will no longer be
 zero-terminated after the following data append) but `data` can be used as
 a regular C string.
 
@@ -117,8 +117,8 @@ The most common functions to append data into buffers are:
 Modification of existing data in a buffer is also performed through direct
 access of structure members.
 
-This covers the basics to handle my `struct buf`, but there might still be
-some interesting stuff to be learned from the header.
+This covers the basics to handle my `struct buf`. But you may still learn 
+some interesting stuff from the header.
 
 
 ### Renderer: `struct mkd_renderer`
@@ -181,34 +181,34 @@ data. I think the struct declaration is pretty obvious:
 ```
 
 The first argument of a renderer function is always the output buffer,
-where the function is supposed to write its output. It's not necessarily
-related to the output buffer given to `markdown()` because in some cases
-render into a temporary buffer is needed.
+where the function is will write its output. It's not necessarily
+related to the output buffer given to `markdown()`, because a temporary 
+buffer is sometimes needed for rendering.
 
 The last argument of a renderer function is always an opaque pointer, which
 is equal to the `opaque` member of `struct mkd_renderer`. The name
 "opaque" might not be well-chosen, but it means a pointer *opaque for the
-parser, **not** for the renderer*. It means that my parser passes around
-blindy the pointer which contains data you know about, in case you need to
-store an internal state or whatever. I have not found anything to put in
-and never look at in the callbacks.
+parser, **not** for the renderer*. This means the parser blindly passes around
+the pointer containining data you know about, in case you need to
+store an internal state or whatever. (I haven't found anything to put in
 this pointer in my example renderers, so it is set to `NULL` in the structure
+and never used by the callbacks.)
 
 `emph_chars` is a zero-terminated string which contains the set of
 characters that trigger emphasis. In regular markdown, emphasis is only
-add other characters to this list. For example in my extension to handle
-emphasis is then passed to `emphasis`, `double_emphasis` and
-`triple_emphasis` through the parameter `c`.
-
-different meaning whether the callback is block-level or span-level. A null
-block-level callback will make the corresponding block disappear from the
-output, as if the callback was an empty function. A null span-level
-callback will cause the corresponding element to be treated as normal
-characters, copied verbatim to the output.
 triggered by `_` and `*`, but in some extensions it might be useful to
+add other characters to this list. For example, in my extension to handle
 `<ins>` and `<del>` spans, delimited respectively by `++` and `--`, I have
 added `+` and `-` to `emph_chars`. The character that triggered the
+emphasis is then passed to `emphasis`, `double_emphasis` and `triple_emphasis`, 
+through the parameter `c`.
+
 Function pointers in `struct mkd_renderer` can be `NULL`, but it has a
+different meaning, depending on whether the callback is block-level or 
+span-level. A null block-level callback will make the corresponding block 
+disappear from the output, as if the callback was an empty function. 
+A null span-level callback will cause the corresponding element to be treated 
+as normal characters, and copied verbatim to the output.
 
 So for example, to disable link and images (e.g. because you consider them
 as dangerous), just put a null pointer in `rndr.link` and `rndr.image` and
@@ -218,19 +218,19 @@ otherwise standard markdown-to-XHTML conversion, you can take the example
 `mkd_xhtml` struct, copy it into your own `struct mkd_renderer` and then
 assign `NULL` to `link` and `image` members.
 
-Moreover, span-level callbacks return an integer, which tells whether the
-renderer accepts to render the item (non-zero return value) or whether it
+Moreover, span-level callbacks return an integer, which indicates whether 
+the renderer will render the item (non-zero return value) or whether it
 should be copied verbatim (zero return value). This allows you to only
 accept some specific inputs. For example, my extension for `<ins>` and
 `<del>` spans asks *exactly* two `-` or `+` delimiters; so, when `emphasis`
 and `triple_emphasis` are called with `-` or `+`, they return `0`.
 
 Special care should be taken when writing `autolink`, `link` and `image`
-callbacks, because the arguments `link`, `title` and `alt` are unsanitized
-data taken directly from the input file. It is up to the renderer to escape
+callbacks: the arguments `link`, `title`, and `alt` are unsanitized data, 
+taken directly from the input file. It is up to the renderer to escape
 whatever needs escaping to prevent bad things from happening. To help you
 writing renderers, the function `lus_attr_escape()` escapes all problematic
-characters in (X)HTML: `'<'`, `'>'`, `'&'` and `'"'`.
+characters in (X)HTML: `<`, `>`, `&` and `"`.
 
 The `normal_text` callback should also perform whatever escape is needed to
 have the output looking like the input data.
@@ -264,22 +264,22 @@ like this:
 Each row of the input text is a single row in the output, except the header
 rule, which is purely syntactic.
 
-Each cell in a row is delimited by a pipe (`|`) character. Optionally, a
+Each cell in a row is delimited by the pipe (`|`) character. Optionally, a
 pipe character can also be present at the beginning and/or at the end of
-the line. Column separator don't have to be aligned in the input, but it
-makes the input more readable.
+the line. Column separators don't have to be aligned (although it does make the 
+input more readable).
 
 There is no check of "squareness" of the table: `table_cell` is called once
 for each cell provided in the input, which can be a number of times
 different from one row to the other. If the output *has* to respect a given
-number of cell per row, it's up to the renderer to enforce it, using state
-transmitted through the `opaque` pointer.
+number of cells per row, it's up to the renderer to enforce it (using state
+transmitted through the `opaque` pointer).
 
 The header rule is a line containing only horizontal blanks (space and
-tab), dashes (`-`), colons (`:`) and separator. Moreover, it *must* be the
-second line of the table. In case such a header rule is detected, the first
+tab), hyphens (`-`), colons (`:`), and separator. Moreover, it *must* be the
+second line of the table. When a header rule is detected, the first
 line of the table is considered as a header, and passed as the `head_row`
-argument to `table` callback. Moreover `table_row` and `table_cell` are
+argument to `table` callback. Additionally, `table_row` and `table_cell` are
 called for that specific row with `MKD_CELL_HEAD` flag.
 
 Alignment is defined on a per-cell basis, and specified by a colon (`:`) at
@@ -297,10 +297,10 @@ the header rule.
 
 ### Renderer examples
 
-While libsoldout is designed to perform only the parsing of markdown files,
-and to let you provide the renderer callbacks, a few renderers have been
-included, both to illustrate how to write a set of renderer functions and
-to allow anybody who do not need special extensions to use libsoldout
+While libsoldout is designed only to parse of markdown files (and allow you 
+to provide the renderer callbacks), a few renderers have been included. 
+They exist to illustrate how to write a set of renderer functions, and
+to allow anybody who does not need special extensions to use libsoldout
 without hassle.
 
 All examples provided here come in two flavors: 
@@ -319,12 +319,12 @@ translation without any extension.
 markdown *some* of the extensions found in Discount.
 
 Actually, all Discount extensions that are not provided here cannot be
-easily implemented in libsoldout without touching to the parsing code,
-hence they do not belong strictly to the renderer realm. However some
-(maybe all, not sure about tables) extensions can be implemented fairly
+easily implemented in libsoldout without touching the parsing code;
+hence, they do not belong strictly to the renderer realm. However some
+(perhaps all?—I'm uncertain about tables) extensions can be implemented fairly
 easily with libsoldout by using both a dedicated renderer and some
-preprocessing to make the extension look like something closer to the
-original markdown syntax.
+preprocessing (to make the extension look like something closer to the
+original markdown syntax).
 
 Here are all the extensions included in the renderers:
 
@@ -339,8 +339,8 @@ Here are all the extensions included in the renderers:
 
 #### Natasha's own extensions
 
-`nat_html` and `nat_xhtml` implement on top of Discount extensions some
-things that I need to convert losslessly my existing HTML into extended
+`nat_html` and `nat_xhtml` implement (on top of Discount extensions) some
+things that I need to losslessly convert my existing HTML into extended
 markdown.
 
 Here is a list of these extensions:
@@ -377,7 +377,7 @@ Here's an example using of all of them:
 Internals
 ---------
 
-Here I  explain the structure of `markdown.c`, and how this parser works. I
+Here I explain the structure of `markdown.c`, and how this parser works. I
 use a logical order, which is roughly chronological, which means going
 roughly from the bottom of the file to the top.
 
@@ -465,33 +465,33 @@ handing the result to the block renderer callback.
 
 #### HTML block parsing
 
-Of interest is the `parse_htmlblock()` function: according to Markdown
-webpage, HTML blocks must be delimited by unindented block-level tags,
-whith the opening tag being preceeded by a blank line, and the closing tag
-being followed by a blank line.
+The `parse_htmlblock()` function is of interest; according to the Markdown
+documentations, HTML blocks must be delimited by unindented block-level tags
+(with the opening tag being preceeded by a blank line, and the closing tag
+being followed by a blank line).
 
-When looking at the reference implementation, `Markdown.pl`, it appeared
-that when this doesn't find a match, a more laxist syntax is tried, where
-the closing tag can be indented,, it only has to be at the end of line and
+When examining the reference implementation (`Markdown.pl`), it appeared
+that when this doesn't find a match, a more lax syntax is tried, where
+the closing tag can be indented; it merely has to be at the end of line and
 followed by a blank line.
 
 But when looking at the test suite, it appeared that a single line
-`<div>foo</div>` surrounded by blank lines should be recorgnized as a
+`<div>foo</div>` surrounded by blank lines *should* be recorgnized as a
 block, regardless of the "matching" unindented closing tag at the end of
 the document. This meant that only the laxist approach should be used.
 
-This why the first pass is commented with a `#if 0`. If you want a strict
-HTML block parsing, as described on the webpage, you should instead comment
+This is why the first pass is commented with a `#if 0`. If you prefer strict
+HTML block parsing (as described on the webpage), you should instead comment
 the second pass. Keeping both first and second passes yields the same
 behaviour as `Markdown.pl` v1.0.1.
 
-I have to admit I do not really care that much about these differences, as
-I do not intend to use personnally any inline HTML, because I will either
-parse unsafe input, then inline HTML is too dangerous, or my own input,
-but I use Markdown when I'm not confident in my HTML correctness, so it
-would be useless to include HTML in my input. However I am aware this
-feature can matter for some people, and any patch or suggestion to "fix"
-this behaviour will be welcome.
+I have to admit, I don't really care about these differences. I do not personally
+intend to use any inline HTML: I can choose to parse unsafe input (in which
+case inline HTML is too dangerous), or parse my own input. But I use Markdown 
+when I'm not confident in my HTML correctness, so it would be useless to 
+include HTML in my input. However, I realize this feature does matter for some 
+people, so I welcome any patche or suggestion you may have to "fix" this 
+behaviour.
 
 
 ### Span-level parsing
@@ -500,22 +500,22 @@ The core of span-level parsing is the function `parse_inline()`, which is
 pretty different from `parse_block()`. It is based around the
 `active_char[]` vector table in the render structure.
 
-The main loop is composed of two parts : first the next active character is
+The main loop is composed of two parts: first the next active character is
 looked for. The string of inactive characters is directly handed over to
 `normal_text` rendering callback.
 
 When a character is active, its corresponding entry in the `active_char[]`
-is a pointer to one of the `char_*`functions. Most of these functions do a
-pretty straightforward work in handling their role.
+is a pointer to one of the `char_*` functions. Most of these functions do
+pretty straightforward work in performing their role.
 
 The most complicated of these functions is `char_link`, which responds to
 `'['`. This is because of the many possibilities offered by markdown to use
-this character : it can either be a part of a link or an image, and then it
+this character: it can either be a part of a link or an image, and then it
 can be inline or reference style or a shortcut reference style.
 
-Emphasis is another interesting piece of code, in that when encountering an
-emphasis character, it first looks whether it is single or double or timple
-emphasis, an then goes forward looking for a match.
+Emphasis is another interesting piece of code. When encountering an emphasis 
+character, it first looks whether it is single or double or triple emphasis, 
+and then continues forward in search of a match.
 
 
 ### Proof that recursion depth is bound by `max_work_stack`
@@ -525,20 +525,19 @@ The core of the code here is that when entering the functions
 buffer stack (`rndr->work`) is above `max_work_stack`, the parsing is
 short-circuited and the input is appended as-is.
 
-Let's prove now that this actually works, i.e. that it does put an upper
-bound on the nested function call depth.
+Let's prove now that this actually works:
 
-**Step 1**: there is no function calling itself directly in `markdown.c`.
+**Step 1:** There is no function calling itself directly in `markdown.c`.
 This is quite easy to check, though a bit tedious. This proves that a stack
 overflow involves a recursion cycle of a least two functions.
 
-**Step 2**: most of the functions in `markdown.c` are declared by their
-definition, which means that these functions can only call functions
-appearing before them in the source file. This provides a strict hierarchy,
-which prevents any multiple-function recursion cycle. So only exceptions to
-the hierarchy are left to check.
+**Step 2:** Most functions in `markdown.c` are declared by their definition, 
+which means that these functions can only call functions that precede them in 
+the source file. This provides a strict hierarchy, which prevents any 
+multiple-function recursion cycle. Thus, only exceptions to the hierarchy are 
+left to check.
 
-**Step 3**: there are only 3 functions that break the above-mentioned
+**Step 3:** There are only 3 functions that break the above-mentioned
 hierarchy:
 
   * `markdown()`, which is declared through the inclusion of `markdown.h`
@@ -550,13 +549,13 @@ hierarchy:
   * `parse_inline()`, which uses functions pointer to dispatch active
     character handling towards `char_*` functions below.
 
-So at this point I have proved that any recursion cycle *always* involves
-`parse_block()` or `parse_inline()`. So checking a depth-indicator only in
-these functions is enough to prevent recursion cycles.
+So far, we've proved that any recursion cycle *always* involves
+`parse_block()` or `parse_inline()`. Therefore, a mere depth-indicator check 
+is enough to prevent recursion cycles in these functions.
 
 **Step 4**: `rndr->work.size` is a good depth-indicator, because all calls
 to `parse_block()` or `parse_inline()` happen after at least one working
-buffer allocation. This is again a bit tedious to check:
+buffer allocation. Again, checking this is a bit tedious:
 
   * `parse_block()` is called in `markdown()` (which is irrelevant), and in
     `parse_blockquote()` and `parse_listitem()`, which respectively allocate
@@ -568,9 +567,9 @@ buffer allocation. This is again a bit tedious to check:
     beginning of the functions.
 
 Therefore, `rndr->work.size` will always increase between calls of
-`parse_block()` or `parse_inline()`, which in turns proves that putting an
-upper bound on `rndr->work.size` prevents arbitrarily deep recursions, and
-therefore stack overflows when the upper bound is well chosen.
+`parse_block()` or `parse_inline()`. This proves that putting an
+upper bound on `rndr->work.size` prevents arbitrarily deep recursions
+(and therefore, stack overflows) when the upper bound is well chosen.
 
 
 ### Utility functions
@@ -582,20 +581,20 @@ deallocations and reallocations (when the buffer grows), which costs a lot
 of time.
 
 So I added a `work` dynamic array pointer, which a special meaning to the
-`size` and `asize` members: in this array, The `size` first members are
+`size` and `asize` members. In this array, the `size` first members are
 active working buffers that are still in use, and the remaining members up
-to `asize` are allocated but no longer used working buffers.
+to `asize` are allocated but unused working buffers.
 
-When a function needs a working buffer, it firs compare `size` to `asize`.
-When they are equal, it means there is no available working buffer, and a
+When a function needs a working buffer, it first compares `size` to `asize`.
+When they are equal, it means there is no working buffer is available, and a
 new one is created and appended (`push`ed) to the array. Otherwise it
 increases `size` and takes the already-allocated buffer as its working
 buffer, resetting its size.
 
 When the working buffer is no longer needed, the `size` of the array is
-just decreased, meaning the buffer is still allocated but ready to be taken
-by the next function in need.
+simply decreased. That way, the buffer is still allocated, but ready to be 
+taken by the next function in need.
 
-When the parsing is over, every working buffer should be marked as ready to
-be reused, hence the assertion of `size` being zero in `markdown()`. The
+When the parsing is complete, every working buffer should be marked as ready 
+for reuse, hence the assertion of `size` being zero in `markdown()`. The
 buffers in the array are finally freed.
