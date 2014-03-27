@@ -42,7 +42,9 @@ Usage
 
 The only exported function in libsoldout is `markdown()`:
 
-	void markdown(struct buf *ob, struct buf *ib, const struct mkd_renderer *rndr);
+```c
+    void markdown(struct buf *ob, struct buf *ib, const struct mkd_renderer *rndr);
+```
 
 - `ob` is the output buffer, where the renderer will append data,
 - `ib` is the input buffer, where the markdown text should be stored prior
@@ -86,7 +88,9 @@ members `data` and `size`. One interesting trick which might not be widely
 known is how to printf a buffer (or any kind of non-zero-terminated
 string) that doesn't contains any zero, using the `%.*s`. For example:
 
+```c
 	printf("Buffer string: \"%.*s\"\n", (int)buf->size, buf->data);
+```
 
 In case you really need a zero-terminated string, you can call
 `bufnullterm()` which appends a zero character without changing `size`,
@@ -119,6 +123,7 @@ called when markdown elements are encountered. Pointers to these functions
 are gathered into a `struct mkd_renderer` along with some renderer-related
 data. I think the struct declaration is pretty obvious:
 
+```c
 	struct mkd_renderer {
 		/* document level callbacks */
 		void (*prolog)(struct buf *ob, void *opaque);
@@ -167,6 +172,7 @@ data. I think the struct declaration is pretty obvious:
 		const char *emph_chars; /* chars that trigger emphasis rendering */
 		void *opaque; /* opaque data send to every rendering callback */
 	};
+```
 
 The first argument of a renderer function is always the output buffer,
 where the function is supposed to write its output. It's not necessarily
@@ -237,6 +243,7 @@ has been introduced into the parser, using dedicated callbacks:
 The input format to describe tables is taken from PHP-Markdown, and looks
 like this:
 
+```markdown
 	header 1    | header 2      | header 3      | header 4
 	------------|:-------------:|--------------:|:--------------
 	first line  |   centered    | right-aligned | left-aligned
@@ -246,6 +253,7 @@ like this:
 	| extra speratators | are allowed | at both ends | of the line |
 	| correct number of cell per row is not enforced |
 	| pipe characters can be embedded in cell text by escaping it: \| |
+```
 
 Each row of the input text is a single row in the output, except the header
 rule, which is purely syntactic.
@@ -341,6 +349,7 @@ Here is a list of these extensions :
 
 Follows an example use of all of them:
 
+```markdown
 	###atx_id#ID was chosen to look nice in atx-style headers ###
 	
 	setext_id#Though it will also work in setext-style headers
@@ -355,7 +364,7 @@ Follows an example use of all of them:
 	(verse)|And on the pedestal these words appear:|
 	|"My name is Ozymandias, king of kings:|
 	|Look on my works, ye Mighty, and despair!"|
-
+```
 
 Internals
 ---------
